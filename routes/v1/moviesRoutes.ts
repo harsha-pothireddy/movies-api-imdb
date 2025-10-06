@@ -100,10 +100,7 @@ router.get("/:imdbId", (req: Request, res: Response) => {
  *         description: No movies found
  */
 router.get("/year/:year", (req: Request, res: Response) => {
-  console.log('=== Year Endpoint Called ===');
-  console.log('Params:', req.params);
-  console.log('Query:', req.query);
-  
+
   const year = parseInt(req.params.year, 10);
   const page = parseInt(req.query.page as string) || 1;
   const order = (req.query.order as string)?.toLowerCase() === 'desc' ? 'desc' : 'asc';
@@ -117,18 +114,15 @@ router.get("/year/:year", (req: Request, res: Response) => {
     });
   }
 
-  console.log('Calling getMoviesByYear...');
   const movies = getMoviesByYear(year, page, order);
   console.log('Got movies:', movies.length);
   
   if (!movies || movies.length === 0) {
-    console.log('No movies found, sending 404');
     return res.status(404).json({ 
       error: `No movies found for year ${year} on page ${page}` 
     });
   }
 
-  console.log('Sending success response');
   res.json({ 
     year, 
     page,
@@ -136,7 +130,6 @@ router.get("/year/:year", (req: Request, res: Response) => {
     count: movies.length,
     results: movies 
   });
-  console.log('Response sent!');
 });
 
 /**

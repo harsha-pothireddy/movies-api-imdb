@@ -2,20 +2,25 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAverageRating = getAverageRating;
 const db_1 = require("./db");
-// Get average rating for a movie
+/**
+ * Get average rating for a movie
+ * Returns null if no ratings found
+ */
 function getAverageRating(movieId) {
-    try {
-        const result = db_1.ratingsDb
-            .prepare(`
+    if (!movieId) {
+        console.warn('getAverageRating called with invalid movieId');
+        return null;
+    }
+    const result = db_1.ratingsDb
+        .prepare(`
       SELECT AVG(rating) as averageRating
       FROM ratings
       WHERE movieId = ?
     `)
-            .get(movieId);
-        return result?.averageRating ?? null;
+        .get(movieId);
+    // Round to 2 decimal places if we have a rating
+    if (result?.averageRating) {
+        return Math.round(result.averageRating * 100) / 100;
     }
-    catch (err) {
-        console.error("Error in getAverageRating:", err);
-        throw err;
-    }
+    return null;
 }

@@ -6,11 +6,56 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const moviesService_1 = require("../../services/moviesService");
 const router = express_1.default.Router();
-// Health check
+/**
+ * Health check endpoint
+ */
 router.get("/health", (_req, res) => {
     res.json({ status: "ok", apiVersion: "v1" });
 });
 /**
+ * List all movies with pagination
+ * GET /api/v1/movies?page=1
+ */
+router.get("/", (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    if (page < 1) {
+        return res.status(400).json({ error: "Page must be a positive integer" });
+    }
+    const movies = (0, moviesService_1.getAllMovies)(page);
+    if (!movies || movies.length === 0) {
+        return res.status(404).json({
+            error: `No movies found for page ${page}`
+        });
+    }
+    res.json({
+        page,
+        pageSize: 50,
+        count: movies.length,
+        results: movies,
+    });
+});
+/**
+ * Get movie details by IMDb ID
+ * GET /api/v1/movies/:imdbId
+ */
+router.get("/:imdbId", (req, res) => {
+    const { imdbId } = req.params;
+    // Basic validation for IMDb ID format
+    if (!imdbId.startsWith('tt')) {
+        return res.status(400).json({
+            error: "Invalid IMDb ID format. Expected format: tt1234567"
+        });
+    }
+    const movie = (0, moviesService_1.getMovieDetails)(imdbId);
+    if (!movie) {
+        return res.status(404).json({ error: "Movie not found" });
+    }
+    res.json(movie);
+});
+/**
+ * Get movies by year with optional sort order
+ * GET /api/v1/movies/year/:year?page=1&order=desc
+ *
  * @swagger
  * /movies/year/{year}:
  *   get:
@@ -19,76 +64,78 @@ router.get("/health", (_req, res) => {
  *     parameters:
  *       - in: path
  *         name: year
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: Release year of the movies
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number for pagination
- *     responses:
- *       200:
- *         description: A list of movies released in the given year
- *       400:
- *         description: Invalid year parameter
- *       404:
- *         description: No movies found for the given year
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
  */
 router.get("/year/:year", (req, res) => {
+    console.log('=== Year Endpoint Called ===');
+    console.log('Params:', req.params);
+    console.log('Query:', req.query);
     const year = parseInt(req.params.year, 10);
     const page = parseInt(req.query.page) || 1;
-    if (isNaN(year) || year < 1800) {
-        return res.status(400).json({ error: "Invalid year parameter" });
+    const order = req.query.order?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+    console.log('Parsed values:', { year, page, order });
+    if (isNaN(year) || year < 1800 || year > 2100) {
+        console.log('Invalid year, sending 400');
+        return res.status(400).json({
+            error: "Invalid year. Must be between 1800 and 2100"
+        });
     }
-    const movies = (0, moviesService_1.getMoviesByYear)(year, page);
+    console.log('Calling getMoviesByYear...');
+    const movies = (0, moviesService_1.getMoviesByYear)(year, page, order);
+    console.log('Got movies:', movies.length);
     if (!movies || movies.length === 0) {
-        return res
-            .status(404)
-            .json({ error: `No movies found for year ${year}, page ${page}` });
+        console.log('No movies found, sending 404');
+        return res.status(404).json({
+            error: `No movies found for year ${year} on page ${page}`
+        });
     }
-    res.json({ year, page, results: movies });
+    console.log('Sending success response');
+    res.json({
+        year,
+        page,
+        sortOrder: order,
+        count: movies.length,
+        results: movies
+    });
+    console.log('Response sent!');
 });
-// Movies by Genre
+/**
+ * Get movies by genre
+ * GET /api/v1/movies/genre/:genre?page=1
+ */
 router.get("/genre/:genre", (req, res) => {
-    const genre = req.params.genre;
+    const { genre } = req.params;
     const page = parseInt(req.query.page) || 1;
-    if (!genre) {
-        return res.status(400).json({ error: "Invalid genre parameter" });
+    if (!genre || genre.trim().length === 0) {
+        return res.status(400).json({ error: "Genre parameter is required" });
+    }
+    if (page < 1) {
+        return res.status(400).json({ error: "Page must be a positive integer" });
     }
     const movies = (0, moviesService_1.getMoviesByGenre)(genre, page);
     if (!movies || movies.length === 0) {
-        return res
-            .status(404)
-            .json({ error: `No movies found for genre ${genre}, page ${page}` });
-    }
-    res.json({ genre, page, results: movies });
-});
-// All Movies
-router.get("/", (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const movies = (0, moviesService_1.getAllMovies)(page);
-    if (!movies || movies.length === 0) {
         return res.status(404).json({
-            status: 404,
-            message: `No movies found for page ${page}`,
+            error: `No movies found for genre "${genre}" on page ${page}`
         });
     }
     res.json({
+        genre,
         page,
-        pageSize: 50,
-        results: movies,
+        count: movies.length,
+        results: movies
     });
-});
-// Movie details by IMDb ID
-router.get("/:imdbId", (req, res) => {
-    const imdbId = req.params.imdbId;
-    const movie = (0, moviesService_1.getMovieDetails)(imdbId);
-    if (!movie) {
-        return res.status(404).json({ error: "Movie not found" });
-    }
-    res.json(movie);
 });
 exports.default = router;
