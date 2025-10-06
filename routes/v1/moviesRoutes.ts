@@ -58,6 +58,11 @@ router.get("/year/:year", (req: Request, res: Response) => {
   res.json({ year, page, results: movies });
 });
 
+
+
+
+
+
 // Movies by Genre
 router.get("/genre/:genre", (req: Request, res: Response) => {
   const genre = req.params.genre;
@@ -76,6 +81,11 @@ router.get("/genre/:genre", (req: Request, res: Response) => {
 
   res.json({ genre, page, results: movies });
 });
+
+
+
+
+
 
 // All Movies
 router.get("/", (req: Request, res: Response) => {
@@ -96,6 +106,11 @@ router.get("/", (req: Request, res: Response) => {
   });
 });
 
+
+
+
+
+
 // Movie details by IMDb ID
 router.get("/:imdbId", (req: Request, res: Response) => {
   const imdbId = req.params.imdbId;
@@ -107,5 +122,10 @@ router.get("/:imdbId", (req: Request, res: Response) => {
 
   res.json(movie);
 });
+
+
+
+
+
 
 export default router;

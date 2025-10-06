@@ -5,11 +5,10 @@ export function getAverageRating(movieId: number): number | null {
   try {
     const result = ratingsDb
       .prepare(
+        `SELECT AVG(rating) as averageRating
+        FROM ratings
+        WHERE movieId = ?
         `
-      SELECT AVG(rating) as averageRating
-      FROM ratings
-      WHERE movieId = ?
-    `
       )
       .get(movieId) as { averageRating?: number };
 

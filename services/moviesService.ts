@@ -1,7 +1,7 @@
 import { moviesDb } from "./db";
 import { getAverageRating } from "./ratingsService";
 
-// Define a Movie type
+// Define a Movie type Interface to be used for all movie objects
 export interface Movie {
   movieId?: number;
   imdbId: string;
@@ -92,29 +92,29 @@ export function getMovieDetails(imdbId: string): Movie | null {
     // Fetch from movies.db
     const movie = moviesDb
       .prepare(
-        `
-      SELECT movieId,
-             imdbId,
-             title,
-             overview AS description,
-             releaseDate,
-             budget,
-             runtime,
-             language AS originalLanguage,
-             genres,
-             productionCompanies
+        `SELECT movieId,
+                imdbId,
+                title,
+                overview AS description,
+                releaseDate,
+                budget,
+                runtime,
+                language AS originalLanguage,
+                genres,
+                productionCompanies
       FROM movies
       WHERE imdbId = ?
-    `
-      )
-      .get(imdbId) as Movie | undefined;
+    `).get(imdbId) as Movie | undefined;
 
     if (!movie) return null;
 
     // Use ratingsService for average rating
     const averageRating = getAverageRating(movie.movieId!);
 
-    return { ...movie, averageRating };
+    const result = { ...movie, averageRating };
+    console.log("Final movie with rating:", result);
+
+    return result;
   } catch (err) {
     console.error("Error in getMovieDetails:", err);
     throw err;
