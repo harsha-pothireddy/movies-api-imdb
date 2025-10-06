@@ -36,3 +36,20 @@ npm run build
 npm start
 ```
 
+### 3. Open Localhost And Test
+```bash
+Server will run at:
+http://localhost:3000
+
+Swagger UI will be available at:
+http://localhost:3000/api-docs
+```
+
+### 4. Open Localhost And Test
+```bash
+Server will run at:
+http://localhost:3000
+
+Swagger UI will be available at:
+http://localhost:3000/api-docs
+```
