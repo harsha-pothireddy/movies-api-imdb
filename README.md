@@ -53,3 +53,17 @@ http://localhost:3000
 Swagger UI will be available at:
 http://localhost:3000/api-docs
 ```
+
+### 4. Different Endpoints Created
+
+```bash
+GET /api/v1/movies/health
+GET /api/v1/movies?page=1
+GET /api/v1/movies/year/{year}?page=1
+GET /api/v1/movies/genre/{genre}?page=1
+GET /api/v1/movies/{imdbId}
+```
+
+
+
+
