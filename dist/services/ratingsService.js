@@ -1,15 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAverageRating = getAverageRating;
-var db_1 = require("./db");
+const db_1 = require("./db");
 // Get average rating for a movie
 function getAverageRating(movieId) {
-    var _a;
     try {
-        var result = db_1.ratingsDb
-            .prepare("\n      SELECT AVG(rating) as averageRating\n      FROM ratings\n      WHERE movieId = ?\n    ")
+        const result = db_1.ratingsDb
+            .prepare(`
+      SELECT AVG(rating) as averageRating
+      FROM ratings
+      WHERE movieId = ?
+    `)
             .get(movieId);
-        return (_a = result === null || result === void 0 ? void 0 : result.averageRating) !== null && _a !== void 0 ? _a : null;
+        return result?.averageRating ?? null;
     }
     catch (err) {
         console.error("Error in getAverageRating:", err);
