@@ -1,21 +1,30 @@
 {
   "name": "imdb-movie-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "RESTful API for movie data with SQLite backend",
+  "main": "dist/server.js",
   "scripts": {
-    "test": "jest",
-    "build": "tsc && cp -r db dist/db",
-    "start": "node dist/server.js"
+    "dev": "ts-node-dev --respawn --transpile-only server.ts",
+    "build": "tsc && cp -r db dist/",
+    "start": "node dist/server.js",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts"
   },
-  "keywords": [],
+  "keywords": [
+    "api",
+    "movies",
+    "imdb",
+    "typescript",
+    "express"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "express": "^5.1.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
@@ -26,7 +35,6 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.2.0",
-    "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",

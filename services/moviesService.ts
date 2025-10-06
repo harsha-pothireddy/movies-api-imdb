@@ -1,122 +1,147 @@
 import { moviesDb } from "./db";
 import { getAverageRating } from "./ratingsService";
 
-// Define a Movie type Interface to be used for all movie objects
+// Movie interface
 export interface Movie {
   movieId?: number;
   imdbId: string;
   title: string;
   description?: string;
   releaseDate: string;
-  budget?: number;
-  runtime?: number;
+  budget?: string; // Formatted budget in dollars
   originalLanguage?: string;
   genres?: string;
   productionCompanies?: string;
   averageRating?: number | null;
 }
 
-// Get paginated movies
-export function getAllMovies(page: number = 1, pageSize: number = 50): Movie[] {
-  try {
-    const offset = (page - 1) * pageSize;
+const DEFAULT_PAGE_SIZE = 50; // Good prac
 
-    const stmt = moviesDb.prepare(`
-      SELECT imdbId, title, genres, releaseDate, budget
-      FROM movies
-      ORDER BY releaseDate ASC
-      LIMIT ? OFFSET ?
-    `);
-
-    return stmt.all(pageSize, offset) as Movie[];
-  } catch (err) {
-    console.error("Error in getAllMovies:", err);
-    throw err;
-  }
+/**
+ * Helper function to format budget in dollars
+ 
+ */
+function formatBudget(budget: number | null): string | undefined {
+  if (!budget || budget === 0) return undefined;
+  
+  // Format as USD with commas
+  return `$${budget.toLocaleString('en-US')}`;
 }
 
-// Get movies by year
+/**
+ * Get all movies with pagination
+ */
+export function getAllMovies(page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE): Movie[] {
+  const offset = (page - 1) * pageSize;
+
+  const stmt = moviesDb.prepare(`
+    SELECT imdbId, title, genres, releaseDate, budget
+    FROM movies
+    ORDER BY releaseDate ASC
+    LIMIT ? OFFSET ?
+  `);
+
+  const movies = stmt.all(pageSize, offset) as any[];
+  
+  // Format budgets for display
+  return movies.map(movie => ({
+    ...movie,
+    budget: formatBudget(movie.budget)
+  }));
+}
+
+/**
+ * Get movies by year with pagination and optional sort order
+ */
 export function getMoviesByYear(
   year: number,
   page: number = 1,
-  pageSize: number = 50
+  sortOrder: 'asc' | 'desc' = 'asc',  
+  pageSize: number = DEFAULT_PAGE_SIZE
 ): Movie[] {
-  try {
-    const offset = (page - 1) * pageSize;
-    const startDate = `${year}-01-01`;
-    const endDate = `${year + 1}-01-01`;
+  const offset = (page - 1) * pageSize;
+  const startDate = `${year}-01-01`;
+  const endDate = `${year + 1}-01-01`;
 
-    const stmt = moviesDb.prepare(`
-      SELECT imdbId, title, genres, releaseDate, budget
-      FROM movies
-      WHERE releaseDate BETWEEN ? AND ?
-      ORDER BY releaseDate ASC
-      LIMIT ? OFFSET ?
-    `);
+  // Validate sort order to prevent SQL injection
+  const order = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
-    return stmt.all(startDate, endDate, pageSize, offset) as Movie[];
-  } catch (err) {
-    console.error("Error in getMoviesByYear:", err);
-    throw err;
-  }
+  const stmt = moviesDb.prepare(`
+    SELECT imdbId, title, genres, releaseDate, budget
+    FROM movies
+    WHERE releaseDate >= ? AND releaseDate < ?
+    ORDER BY releaseDate ${order}
+    LIMIT ? OFFSET ?
+  `);
+
+  const movies = stmt.all(startDate, endDate, pageSize, offset) as any[];
+  
+  return movies.map(movie => ({
+    ...movie,
+    budget: formatBudget(movie.budget)
+  }));
 }
 
-// Get movies by genre
+/**
+ * Get movies by genre with pagination
+ */
 export function getMoviesByGenre(
   genre: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = DEFAULT_PAGE_SIZE
 ): Movie[] {
-  try {
-    const offset = (page - 1) * pageSize;
-    const genrePattern = `%${genre}%`;
+  const offset = (page - 1) * pageSize;
+  
+  // Case-insensitive search for genre
+  const genrePattern = `%${genre}%`;
 
-    const stmt = moviesDb.prepare(`
-      SELECT imdbId, title, genres, releaseDate, budget
-      FROM movies
-      WHERE genres LIKE ?
-      ORDER BY releaseDate ASC
-      LIMIT ? OFFSET ?
-    `);
+  const stmt = moviesDb.prepare(`
+    SELECT imdbId, title, genres, releaseDate, budget
+    FROM movies
+    WHERE genres LIKE ?
+    ORDER BY releaseDate ASC
+    LIMIT ? OFFSET ?
+  `);
 
-    return stmt.all(genrePattern, pageSize, offset) as Movie[];
-  } catch (err) {
-    console.error("Error in getMoviesByGenre:", err);
-    throw err;
-  }
+  const movies = stmt.all(genrePattern, pageSize, offset) as any[];
+  
+  return movies.map(movie => ({
+    ...movie,
+    budget: formatBudget(movie.budget)
+  }));
 }
 
-// Get movie details by imdbId
+/**
+ * Get detailed information for a specific movie
+ */
 export function getMovieDetails(imdbId: string): Movie | null {
-  try {
-    // Fetch from movies.db
-    const movie = moviesDb
-      .prepare(
-        `SELECT movieId,
-                imdbId,
-                title,
-                overview AS description,
-                releaseDate,
-                budget,
-                runtime,
-                language AS originalLanguage,
-                genres,
-                productionCompanies
+  // Fetch movie from database
+  const movie = moviesDb
+    .prepare(`
+      SELECT movieId,
+             imdbId,
+             title,
+             overview AS description,
+             releaseDate,
+             budget,
+             runtime,
+             language AS originalLanguage,
+             genres,
+             productionCompanies
       FROM movies
       WHERE imdbId = ?
-    `).get(imdbId) as Movie | undefined;
+    `)
+    .get(imdbId) as any;
 
-    if (!movie) return null;
+  if (!movie) return null;
 
-    // Use ratingsService for average rating
-    const averageRating = getAverageRating(movie.movieId!);
+  // Get average rating from ratings database
+  const averageRating = getAverageRating(movie.movieId);
 
-    const result = { ...movie, averageRating };
-    console.log("Final movie with rating:", result);
-
-    return result;
-  } catch (err) {
-    console.error("Error in getMovieDetails:", err);
-    throw err;
-  }
+  // Format and return
+  return {
+    ...movie,
+    budget: formatBudget(movie.budget),
+    averageRating
+  };
 }
