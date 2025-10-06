@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build": "tsc && cp -r db dist/db"
+    "build": "tsc && cp -r db dist/db",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
