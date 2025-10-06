@@ -1,4 +1,4 @@
 node_modules/
-db/*.db
-
-
+# Build output
+dist/
+build/
