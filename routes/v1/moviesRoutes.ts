@@ -66,13 +66,10 @@ router.get("/:imdbId", (req: Request, res: Response) => {
 });
 
 /**
- * Get movies by year with optional sort order
- * GET /api/v1/movies/year/:year?page=1&order=desc
- * 
  * @swagger
  * /movies/year/{year}:
  *   get:
- *     summary: Get movies released in a specific year
+ *     summary: Get movies by year
  *     tags: [Movies]
  *     parameters:
  *       - in: path
@@ -90,32 +87,48 @@ router.get("/:imdbId", (req: Request, res: Response) => {
  *         schema:
  *           type: string
  *           enum: [asc, desc]
- *           default: asc
+ *     responses:
+ *       200:
+ *         description: List of movies from specified year
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Invalid year parameter
+ *       404:
+ *         description: No movies found
  */
 router.get("/year/:year", (req: Request, res: Response) => {
+  console.log('=== Year Endpoint Called ===');
+  console.log('Params:', req.params);
+  console.log('Query:', req.query);
+  
   const year = parseInt(req.params.year, 10);
   const page = parseInt(req.query.page as string) || 1;
   const order = (req.query.order as string)?.toLowerCase() === 'desc' ? 'desc' : 'asc';
 
-  // Validation
+  console.log('Parsed values:', { year, page, order });
+
   if (isNaN(year) || year < 1800 || year > 2100) {
+    console.log('Invalid year, sending 400');
     return res.status(400).json({ 
       error: "Invalid year. Must be between 1800 and 2100" 
     });
   }
 
-  if (page < 1) {
-    return res.status(400).json({ error: "Page must be a positive integer" });
-  }
-
+  console.log('Calling getMoviesByYear...');
   const movies = getMoviesByYear(year, page, order);
+  console.log('Got movies:', movies.length);
   
   if (!movies || movies.length === 0) {
+    console.log('No movies found, sending 404');
     return res.status(404).json({ 
       error: `No movies found for year ${year} on page ${page}` 
     });
   }
 
+  console.log('Sending success response');
   res.json({ 
     year, 
     page,
@@ -123,6 +136,7 @@ router.get("/year/:year", (req: Request, res: Response) => {
     count: movies.length,
     results: movies 
   });
+  console.log('Response sent!');
 });
 
 /**
