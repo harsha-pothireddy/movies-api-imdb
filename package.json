@@ -7,17 +7,11 @@
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc && cp -r db dist/",
     "start": "node dist/server.js",
-    "test": "jest --coverage",
+    "test": "set NODE_ENV=test && jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts"
   },
-  "keywords": [
-    "api",
-    "movies",
-    "imdb",
-    "typescript",
-    "express"
-  ],
+  "keywords": [],
   "author": "",
   "dependencies": {
     "better-sqlite3": "^12.4.1",

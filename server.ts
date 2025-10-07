@@ -12,6 +12,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/api/v1/movies", moviesRoutesV1);
 
 // Start server (skip if running in test mode)
+console.log('NODE_ENV:', process.env.NODE_ENV);
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
