@@ -54,7 +54,3 @@ GET /api/v1/movies/year/{year}?page=1
 GET /api/v1/movies/genre/{genre}?page=1
 GET /api/v1/movies/{imdbId}
 ```
-
-
-
-

@@ -32,6 +32,7 @@ function formatBudget(budget: number | null): string | undefined {
  * Get all movies with pagination
  */
 export function getAllMovies(page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE): Movie[] {
+  console.log("Fetching all movies, page:", page);
   const offset = (page - 1) * pageSize;
 
   const stmt = moviesDb.prepare(`
@@ -59,6 +60,8 @@ export function getMoviesByYear(
   sortOrder: 'asc' | 'desc' = 'asc',  
   pageSize: number = DEFAULT_PAGE_SIZE
 ): Movie[] {
+
+  console.log("Fetching movies by year:", year, "page:", page, "order:", sortOrder);
   const offset = (page - 1) * pageSize;
   const startDate = `${year}-01-01`;
   const endDate = `${year + 1}-01-01`;
@@ -73,6 +76,9 @@ export function getMoviesByYear(
     ORDER BY releaseDate ${order}
     LIMIT ? OFFSET ?
   `);
+
+  console.log("Executing query with:", { startDate, endDate, pageSize, offset, order });
+  console.log("SQL Query:", stmt.source);
 
   const movies = stmt.all(startDate, endDate, pageSize, offset) as any[];
   

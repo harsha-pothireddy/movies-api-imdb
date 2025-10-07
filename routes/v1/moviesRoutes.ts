@@ -16,31 +16,35 @@ router.get("/health", (_req: Request, res: Response) => {
 });
 
 /**
+ * AC:1
  * List all movies with pagination
  * GET /api/v1/movies?page=1
  */
 router.get("/", (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
+  const page = parseInt(req.query.page as string) || 1;  
   
   if (page < 1) {
     return res.status(400).json({ error: "Page must be a positive integer" });
   }
-
+  
   const movies = getAllMovies(page);
-
   if (!movies || movies.length === 0) {
     return res.status(404).json({
       error: `No movies found for page ${page}`
     });
   }
-
+  
   res.json({
     page,
     pageSize: 50,
     count: movies.length,
     results: movies,
   });
+
 });
+
+
+
 
 /**
  * Get movie details by IMDb ID
